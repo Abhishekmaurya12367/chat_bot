@@ -1,19 +1,21 @@
 from pathlib import Path
 # pyrefly: ignore [missing-import]
 from langchain_community.document_loaders import PyPDFLoader
-def file_load(pdf_folder):
-    pdf_folder=Path(pdf_folder)
+
+def load_pdfs(pdf_folder):
+    pdf_folder = Path(pdf_folder)
     if not pdf_folder.exists():
         raise FileNotFoundError(
-            f"no pdf file exist:{pdf_folder}"
-          
+            f"no pdf file exist: {pdf_folder}"
         )
-    pdf_file=sorted(pdf_folder.glob("*.pdf"))    
-    if not pdf_file:
+    pdf_files = sorted(pdf_folder.glob("*.pdf"))
+    if not pdf_files:
         raise FileNotFoundError(
-            f"file does not found:{pdf_file}"
+            f"No PDF files found in: {pdf_folder}"
         )
-    document=[]
-    if file in pdf_file:
-        
- 
+    documents = []
+    for file in pdf_files:
+        print(f"  Loading: {file.name}")
+        loader = PyPDFLoader(str(file))
+        documents.extend(loader.load())
+    return documents
