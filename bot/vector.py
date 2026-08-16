@@ -32,21 +32,25 @@ class GeminiEmbeddings(Embeddings):
         return results
 
 
-def get_vector_store():
-    """Create and return the AstraDB vector store (lazy init)."""
-    embeddings = GeminiEmbeddings()
+_VECTOR_STORE = None
 
-    vector_store = AstraDBVectorStore(
-        collection_name="government_scheme",
-        embedding=embeddings,
-        api_endpoint=os.getenv("ASTRA_DB_API_ENDPOINT"),
-        token=os.getenv("ASTRA_DB_APPLICATION_TOKEN"),
-        namespace=os.getenv("ASTRA_DB_KEYSPACE"),
-        bulk_insert_batch_concurrency=1,
-        bulk_insert_overwrite_concurrency=1,
-        batch_size=10
-    )
-    return vector_store
+
+def get_vector_store():
+    """Create and return the AstraDB vector store (cached singleton)."""
+    global _VECTOR_STORE
+    if _VECTOR_STORE is None:
+        embeddings = GeminiEmbeddings()
+        _VECTOR_STORE = AstraDBVectorStore(
+            collection_name="government_scheme",
+            embedding=embeddings,
+            api_endpoint=os.getenv("ASTRA_DB_API_ENDPOINT"),
+            token=os.getenv("ASTRA_DB_APPLICATION_TOKEN"),
+            namespace=os.getenv("ASTRA_DB_KEYSPACE"),
+            bulk_insert_batch_concurrency=1,
+            bulk_insert_overwrite_concurrency=1,
+            batch_size=10
+        )
+    return _VECTOR_STORE
 
 
 def store_chunks(chunks, batch_size=20):
