@@ -5,7 +5,10 @@ from dotenv import load_dotenv
 from langchain_core.embeddings import Embeddings
 from langchain_astradb import AstraDBVectorStore
 
-load_dotenv()
+from pathlib import Path
+
+ENV_PATH = Path(__file__).parent.parent / ".env"
+load_dotenv(dotenv_path=ENV_PATH, override=True)
 
 
 class GeminiEmbeddings(Embeddings):
@@ -49,6 +52,16 @@ def get_vector_store():
 def store_chunks(chunks, batch_size=20):
     print("\n[+] Connecting to AstraDB...", flush=True)
     vector_store = get_vector_store()
+
+    # Check if documents already exist in AstraDB to avoid re-uploading
+    try:
+        existing = vector_store.astra_env.collection.find_one()
+        if existing is not None:
+            print("[+] Documents are already stored in AstraDB. Skipping re-upload!", flush=True)
+            return
+    except Exception:
+        pass
+
     total = len(chunks)
     print(f"[+] Embedding and uploading {total} chunks in batches of {batch_size}...", flush=True)
 

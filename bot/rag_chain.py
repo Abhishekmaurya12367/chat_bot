@@ -1,9 +1,12 @@
 import os
 import requests
 from dotenv import load_dotenv
-from retriever import retrieve_documents
+from pathlib import Path
 
-load_dotenv()
+ENV_PATH = Path(__file__).parent.parent / ".env"
+load_dotenv(dotenv_path=ENV_PATH, override=True)
+
+from retriever import retrieve_documents
 
 PROMPT_TEMPLATE = """You are a government scheme assistant.
 
@@ -25,14 +28,14 @@ Answer:"""
 def call_gemini(prompt_text: str) -> str:
     api_key = os.getenv("GOOGLE_API_KEY")
     models_to_try = [
-        "gemini-2.5-flash",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash-latest",
-        "gemini-pro"
+        "models/gemini-3.7-flash",
+        "models/gemini-3.5-flash",
+        "models/gemini-3-flash-preview",
+        "models/gemini-flash-latest",
     ]
 
     for model in models_to_try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/{model}:generateContent?key={api_key}"
         body = {
             "contents": [{"parts": [{"text": prompt_text}]}],
             "generationConfig": {"temperature": 0.1}
@@ -41,11 +44,10 @@ def call_gemini(prompt_text: str) -> str:
             resp = requests.post(url, json=body, timeout=30)
             if resp.status_code == 200:
                 data = resp.json()
-                return data["candidates"][0]["content"]["parts"][0]["text"]
+                return data["candidates"][0]["content"]["parts"][0]["text"].strip()
         except Exception:
             continue
 
-    # Fallback to direct error message if all fail
     return "Error: Could not generate response from Gemini API."
 
 
