@@ -3,6 +3,9 @@ print("mains.py has been started")
 from pathlib import Path
 from loader import load_pdfs
 from dataconvert import clean_documents
+from chunker import create_chunks
+from vector import store_chunks
+from rag_chain import rag_chain
 
 # Resolve path relative to this script's location (not the working directory)
 DATA_FOLDER = Path(__file__).parent.parent / "data"
@@ -30,3 +33,14 @@ for document in cleaned[:3]:
     print(document.metadata)
 
     print("-" * 60)
+
+chank = create_chunks(cleaned)
+#now i am going call the vector module
+store_chunks(chank)
+
+question = input("Ask your question: ")
+
+answer = rag_chain(question)
+
+print("\nAnswer:")
+print(answer)
